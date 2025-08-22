@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rails-changesets (1.0.0)
+    activerecord-changesets (1.0.0)
       activerecord (>= 8.0)
 
 GEM
@@ -142,10 +142,10 @@ PLATFORMS
 
 DEPENDENCIES
   actionpack (>= 8.0)
+  activerecord-changesets!
   benchmark-ips (~> 2.14)
   minitest (~> 5.0)
   minitest-reporters (~> 1.1)
-  rails-changesets!
   rubocop (~> 1.75)
   sqlite3 (~> 2.0)
   standard (~> 1.49)

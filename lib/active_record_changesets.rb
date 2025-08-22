@@ -1,5 +1,6 @@
 module ActiveRecordChangesets
   class MissingParameters < StandardError; end
+  class UnknownChangeset < StandardError; end
 
   def self.included(base)
     base.extend(ClassMethods)
@@ -27,7 +28,12 @@ module ActiveRecordChangesets
       #   user = User.find(params[:id])
       #   changeset = user.change_email
       define_method(key) do |params = nil|
-        changeset = becomes self.class.changeset_class(key)
+        changeset = self.class.changeset_class(key).new
+        changeset.instance_variable_set(:@attributes, @attributes.deep_dup)
+        changeset.instance_variable_set(:@mutations_from_database, @mutations_from_database ||= nil)
+        changeset.instance_variable_set(:@new_record, new_record?)
+        changeset.instance_variable_set(:@destroyed, destroyed?)
+
         changeset.assign_attributes(params) unless params.nil?
         changeset.instance_variable_set(:"@parent_model", self)
 
@@ -45,6 +51,7 @@ module ActiveRecordChangesets
     end
 
     def changeset_class(name)
+      raise UnknownChangeset, "Unknown changeset for #{self.name}: #{name}" unless self._changeset_classes.has_key?(name)
       return self._changeset_classes[name] unless self._changeset_classes[name].is_a?(Proc)
 
       _changeset_mutex.synchronize do
@@ -99,12 +106,21 @@ module ActiveRecordChangesets
           end
         end
 
+        def save(**, &)
+          super(**, &)
+        end
+
+        def save!(**, &)
+          super(**, &)
+        end
+
         # We overwrite assign_attributes to filter the attributes for all mass assignments
         def assign_attributes(new_attributes)
           unless new_attributes.respond_to?(:each_pair)
             raise ArgumentError, "When assigning attributes, you must pass a hash as an argument, #{new_attributes.class} passed."
           end
 
+          new_attributes = new_attributes.dup
           new_attributes = new_attributes.to_unsafe_h if new_attributes.respond_to?(:to_unsafe_h)
           new_attributes.symbolize_keys! if new_attributes.respond_to?(:symbolize_keys!)
 
@@ -136,20 +152,6 @@ module ActiveRecordChangesets
           end
 
           filtered_attributes
-        end
-
-        # When the changeset is persisted, notify the parent model
-        def save(*)
-          super(*)
-
-          @parent_model.instance_variable_set(:@new_record, @new_record)
-        end
-
-        # When the changeset is persisted, notify the parent model
-        def save!(*)
-          super(*)
-
-          @parent_model.instance_variable_set(:@new_record, @new_record)
         end
       end
       changeset_class.class_eval(&self._changeset_classes[name])
