@@ -22,3 +22,6 @@ Style/MethodDefParentheses:
   Enabled: true
 Naming/MethodName:
   Enabled: true
+
+Lint/NestedMethodDefinition:
+  Enabled: false

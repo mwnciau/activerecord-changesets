@@ -113,7 +113,7 @@ class MassAssignmentTest < TestCase
     changeset = User.expected_changeset(
       name: "Bob",
       email: "bob@example.com",
-      other: "ignored"
+      other: "ignored",
     )
     changeset.save!
 

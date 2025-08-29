@@ -1,5 +1,6 @@
 module ActiveRecordChangesets
   class MissingParameters < StandardError; end
+
   class UnknownChangeset < StandardError; end
 
   def self.included(base)
@@ -35,7 +36,7 @@ module ActiveRecordChangesets
         changeset.instance_variable_set(:@destroyed, destroyed?)
 
         changeset.assign_attributes(params) unless params.nil?
-        changeset.instance_variable_set(:"@parent_model", self)
+        changeset.instance_variable_set(:@parent_model, self)
 
         changeset
       end
@@ -51,8 +52,8 @@ module ActiveRecordChangesets
     end
 
     def changeset_class(name)
-      raise UnknownChangeset, "Unknown changeset for #{self.name}: #{name}" unless self._changeset_classes.has_key?(name)
-      return self._changeset_classes[name] unless self._changeset_classes[name].is_a?(Proc)
+      raise UnknownChangeset, "Unknown changeset for #{self.name}: #{name}" unless _changeset_classes.has_key?(name)
+      return _changeset_classes[name] unless _changeset_classes[name].is_a?(Proc)
 
       _changeset_mutex.synchronize do
         # Prevent rqce condition where two threads call changeset_class at the same time, both
@@ -76,13 +77,13 @@ module ActiveRecordChangesets
 
           def expect(*keys)
             keys.each do |key|
-              self.permitted_attributes[key.to_sym] = {optional: false}
+              permitted_attributes[key.to_sym] = {optional: false}
             end
           end
 
           def permit(*keys)
             keys.each do |key|
-              self.permitted_attributes[key.to_sym] = {optional: true}
+              permitted_attributes[key.to_sym] = {optional: true}
             end
           end
 
@@ -90,7 +91,7 @@ module ActiveRecordChangesets
             association_key = association.to_sym
             changeset_key = changeset.to_sym
 
-            self.nested_changesets[association_key] = changeset
+            nested_changesets[association_key] = changeset
             accepts_nested_attributes_for association_key, **options
 
             if optional
@@ -107,11 +108,11 @@ module ActiveRecordChangesets
         end
 
         def save(**, &)
-          super(**, &)
+          super
         end
 
         def save!(**, &)
-          super(**, &)
+          super
         end
 
         # We overwrite assign_attributes to filter the attributes for all mass assignments
@@ -140,7 +141,7 @@ module ActiveRecordChangesets
           self.class.permitted_attributes.each do |key, config|
             if attributes.has_key?(key)
               filtered_attributes[key] = attributes[key]
-            elsif  attributes.has_key?(key.to_s)
+            elsif attributes.has_key?(key.to_s)
               filtered_attributes[key] = attributes[key.to_s]
             elsif !config[:optional]
               missing_attributes << key
@@ -154,7 +155,7 @@ module ActiveRecordChangesets
           filtered_attributes
         end
       end
-      changeset_class.class_eval(&self._changeset_classes[name])
+      changeset_class.class_eval(&_changeset_classes[name])
 
       # Give the anonymous class a name for clearer backtraces (e.g. Model::Changesets::CreateModel)
       const_get(:Changesets).const_set(name.to_s.camelcase, changeset_class)
