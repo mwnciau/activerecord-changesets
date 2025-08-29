@@ -1,9 +1,14 @@
+require "active_support/core_ext/module/attribute_accessors"
+
 module ActiveRecordChangesets
   class Error < StandardError; end
   class MissingParametersError < Error; end
   class StrictParametersError < Error; end
 
   class UnknownChangeset < StandardError; end
+
+  mattr_accessor :ignored_attributes, default: [:authenticity_token, :_method]
+  mattr_accessor :strict_mode, default: false
 
   def self.included(base)
     base.extend(ClassMethods)
@@ -20,6 +25,8 @@ module ActiveRecordChangesets
   module ClassMethods
     def changeset(name, **options, &block)
       key = name.to_sym
+
+      options.with_defaults!(strict: ActiveRecordChangesets.strict_mode, ignore: ActiveRecordChangesets.ignored_attributes)
 
       # Defer building the class until methods in the parent model are available
       _changesets[key] = {dsl_proc: block, options:}
@@ -126,9 +133,8 @@ module ActiveRecordChangesets
             raise ArgumentError, "When assigning attributes, you must pass a Hash as an argument, #{new_attributes.class} passed."
           end
 
-          new_attributes = new_attributes.dup
           new_attributes = new_attributes.to_unsafe_h if new_attributes.respond_to?(:to_unsafe_h)
-          new_attributes.symbolize_keys! if new_attributes.respond_to?(:symbolize_keys!)
+          new_attributes = new_attributes.symbolize_keys if new_attributes.respond_to?(:symbolize_keys!)
 
           # If the given Hash is wrapped in the model key, we extract it
           model_key = model_name.param_key.to_sym
@@ -160,7 +166,7 @@ module ActiveRecordChangesets
           # If we have enabled strict mode, check for extra attributes. Perform a faster check
           # using count first before comparing keys.
           if self.class.changeset_options[:strict] && attributes.count > filtered_attributes.count
-            extra_attributes = attributes.keys - filtered_attributes.keys
+            extra_attributes = attributes.keys - filtered_attributes.keys - self.class.changeset_options[:ignore]
 
             if extra_attributes.any?
               raise ActiveRecordChangesets::StrictParametersError, "#{self.class.name}: Unexpected parameters passed to changeset: #{extra_attributes.join(", ")}"
