@@ -166,4 +166,24 @@ class MassAssignmentTest < TestCase
 
     assert_accepts_parameter_format(params)
   end
+  
+  def test_parameter_format_invalid_raises
+    error = assert_raises(ArgumentError) do
+      User.mixed_changeset("not a hash")
+    end
+
+    assert_equal "When assigning attributes, you must pass a Hash as an argument, String passed.", error.message
+
+    error = assert_raises(ArgumentError) do
+      User.mixed_changeset(123)
+    end
+
+    assert_equal "When assigning attributes, you must pass a Hash as an argument, Integer passed.", error.message
+
+    error = assert_raises(ArgumentError) do
+      User.mixed_changeset([1, 2, 3])
+    end
+
+    assert_equal "When assigning attributes, you must pass a Hash as an argument, Array passed.", error.message
+  end
 end

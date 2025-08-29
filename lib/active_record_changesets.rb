@@ -118,7 +118,7 @@ module ActiveRecordChangesets
         # We overwrite assign_attributes to filter the attributes for all mass assignments
         def assign_attributes(new_attributes)
           unless new_attributes.respond_to?(:each_pair)
-            raise ArgumentError, "When assigning attributes, you must pass a hash as an argument, #{new_attributes.class} passed."
+            raise ArgumentError, "When assigning attributes, you must pass a Hash as an argument, #{new_attributes.class} passed."
           end
 
           new_attributes = new_attributes.dup
