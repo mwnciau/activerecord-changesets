@@ -12,6 +12,10 @@ class ChangesetTest < TestCase
       changeset :change_name do
         expect :name
       end
+
+      changeset :strict_change_name, strict: true do
+        expect :name
+      end
     end
   end
 
@@ -35,5 +39,15 @@ class ChangesetTest < TestCase
 
     assert_equal Cat, cat.class
     assert_equal "Rob", cat.name
+  end
+
+  def test_strict_option
+    cat = Cat.create!(name: "Bob")
+
+    error = assert_raises ActiveRecordChangesets::StrictParametersError do
+      cat.strict_change_name(name: "Rob", extra_attribute: "something")
+    end
+
+    assert_equal "Cat::Changesets::StrictChangeName: Unexpected parameters passed to changeset: extra_attribute", error.message
   end
 end

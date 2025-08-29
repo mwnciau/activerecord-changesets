@@ -80,7 +80,7 @@ class NestedChangesetHabtmTest < TestCase
   end
 
   def test_habtm_required_raises_on_missing
-    error = assert_raises(ActiveRecordChangesets::MissingParameters) do
+    error = assert_raises(ActiveRecordChangesets::MissingParametersError) do
       Author.required_habtm(name: "A1")
     end
 
@@ -108,7 +108,7 @@ class NestedChangesetHabtmTest < TestCase
   end
 
   def test_habtm_optional_raises_on_empty_nested_parameters
-    error = assert_raises(ActiveRecordChangesets::MissingParameters) do
+    error = assert_raises(ActiveRecordChangesets::MissingParametersError) do
       Author.optional_habtm(name: "A1", books_attributes: [{}])
     end
 

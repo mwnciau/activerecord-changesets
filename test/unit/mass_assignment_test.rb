@@ -39,7 +39,7 @@ class MassAssignmentTest < TestCase
   end
 
   def test_expected_raises_on_missing
-    error = assert_raises ActiveRecordChangesets::MissingParameters do
+    error = assert_raises ActiveRecordChangesets::MissingParametersError do
       User.expected_changeset({})
     end
 
@@ -102,7 +102,7 @@ class MassAssignmentTest < TestCase
   end
 
   def test_mixed_raises_on_missing_name
-    error = assert_raises ActiveRecordChangesets::MissingParameters do
+    error = assert_raises ActiveRecordChangesets::MissingParametersError do
       User.mixed_changeset(email: "Bob")
     end
 
@@ -145,6 +145,10 @@ class MassAssignmentTest < TestCase
     assert_accepts_parameter_format({user: PARAM_FORMAT_BASE})
   end
 
+  def test_parameter_format_frozen_hash
+    assert_accepts_parameter_format({user: PARAM_FORMAT_BASE}.freeze)
+  end
+
   def test_parameter_format_strong_params
     params = ActionController::Parameters.new(PARAM_FORMAT_BASE)
 
@@ -166,7 +170,7 @@ class MassAssignmentTest < TestCase
 
     assert_accepts_parameter_format(params)
   end
-  
+
   def test_parameter_format_invalid_raises
     error = assert_raises(ArgumentError) do
       User.mixed_changeset("not a hash")

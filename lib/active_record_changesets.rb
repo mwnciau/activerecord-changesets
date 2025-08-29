@@ -1,13 +1,15 @@
 module ActiveRecordChangesets
-  class MissingParameters < StandardError; end
+  class Error < StandardError; end
+  class MissingParametersError < Error; end
+  class StrictParametersError < Error; end
 
   class UnknownChangeset < StandardError; end
 
   def self.included(base)
     base.extend(ClassMethods)
 
-    base.class_attribute :_changeset_classes, instance_accessor: false, default: {}
-    base.private_class_method :_changeset_classes, :_changeset_classes=
+    base.class_attribute :_changesets, default: {}
+    base.private_class_method :_changesets, :_changesets=
 
     base.class_attribute :_changeset_mutex, instance_accessor: false, default: Mutex.new
     base.private_class_method :_changeset_mutex, :_changeset_mutex=
@@ -16,11 +18,11 @@ module ActiveRecordChangesets
   end
 
   module ClassMethods
-    def changeset(name, &block)
+    def changeset(name, **options, &block)
       key = name.to_sym
 
       # Defer building the class until methods in the parent model are available
-      _changeset_classes[key] = block
+      _changesets[key] = {dsl_proc: block, options:}
 
       # Define an instance method to convert an existing model into the changeset
       #
@@ -52,15 +54,16 @@ module ActiveRecordChangesets
     end
 
     def changeset_class(name)
-      raise UnknownChangeset, "Unknown changeset for #{self.name}: #{name}" unless _changeset_classes.has_key?(name)
-      return _changeset_classes[name] unless _changeset_classes[name].is_a?(Proc)
+      raise UnknownChangeset, "Unknown changeset for #{self.name}: #{name}" unless _changesets.has_key?(name)
+
+      return _changesets[name][:class] if _changesets[name][:class].present?
 
       _changeset_mutex.synchronize do
         # Prevent rqce condition where two threads call changeset_class at the same time, both
         # observing a Proc and building two distinct classes
-        return _changeset_classes[name] unless _changeset_classes[name].is_a?(Proc)
+        return _changesets[name][:class] if _changesets[name][:class].present?
 
-        _changeset_classes[name] = build_changeset_class(name)
+        _changesets[name][:class] = build_changeset_class(name)
       end
     end
 
@@ -71,6 +74,8 @@ module ActiveRecordChangesets
 
         class_attribute :permitted_attributes, instance_accessor: false, default: {}
         private_class_method :permitted_attributes=
+
+        class_attribute :changeset_options, instance_accessor: false, default: {}
 
         class << self
           delegate :model_name, to: :superclass
@@ -149,13 +154,25 @@ module ActiveRecordChangesets
           end
 
           if missing_attributes.any?
-            raise ActiveRecordChangesets::MissingParameters, "#{self.class.name}: Expected parameters were missing: #{missing_attributes.join(", ")}"
+            raise ActiveRecordChangesets::MissingParametersError, "#{self.class.name}: Expected parameters were missing: #{missing_attributes.join(", ")}"
+          end
+
+          # If we have enabled strict mode, check for extra attributes. Perform a faster check
+          # using count first before comparing keys.
+          if self.class.changeset_options[:strict] && attributes.count > filtered_attributes.count
+            extra_attributes = attributes.keys - filtered_attributes.keys
+
+            if extra_attributes.any?
+              raise ActiveRecordChangesets::StrictParametersError, "#{self.class.name}: Unexpected parameters passed to changeset: #{extra_attributes.join(", ")}"
+            end
           end
 
           filtered_attributes
         end
       end
-      changeset_class.class_eval(&_changeset_classes[name])
+      changeset_class.changeset_options = _changesets[name][:options]
+      changeset_class.class_eval(&_changesets[name][:dsl_proc])
+      _changesets[name].delete :dsl_proc
 
       # Give the anonymous class a name for clearer backtraces (e.g. Model::Changesets::CreateModel)
       const_get(:Changesets).const_set(name.to_s.camelcase, changeset_class)

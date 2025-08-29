@@ -162,12 +162,12 @@ end
 
 #### Error Handling
 
-If required parameters are missing, a `ActiveRecordChangesets::MissingParameters` error will be raised:
+If required parameters are missing, a `ActiveRecordChangesets::MissingParametersError` error will be raised:
 
 ```ruby
 begin
   User.create_user({}) # Missing all required parameters
-rescue ActiveRecordChangesets::MissingParameters => e
+rescue ActiveRecordChangesets::MissingParametersError => e
   puts e.message
   # => "User::Changesets::CreateUser: Expected parameters were missing: first_name, last_name, email, password"
 end

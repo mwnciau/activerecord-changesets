@@ -82,7 +82,7 @@ class NestedChangesetBelongsToTest < TestCase
   end
 
   def test_belongs_to_required_raises_with_empty_nested_parameters
-    error = assert_raises(ActiveRecordChangesets::MissingParameters) do
+    error = assert_raises(ActiveRecordChangesets::MissingParametersError) do
       Room.required_belongs_to(name: "Kitchen", house_attributes: {})
     end
 
@@ -90,7 +90,7 @@ class NestedChangesetBelongsToTest < TestCase
   end
 
   def test_belongs_to_required_raises_on_missing
-    error = assert_raises(ActiveRecordChangesets::MissingParameters) do
+    error = assert_raises(ActiveRecordChangesets::MissingParametersError) do
       Room.required_belongs_to(name: "Kitchen")
     end
 
@@ -121,7 +121,7 @@ class NestedChangesetBelongsToTest < TestCase
   end
 
   def test_belongs_to_optional_raises_on_empty_nested_parameters
-    error = assert_raises(ActiveRecordChangesets::MissingParameters) do
+    error = assert_raises(ActiveRecordChangesets::MissingParametersError) do
       Room.optional_belongs_to(name: "Kitchen", house_attributes: {})
     end
 

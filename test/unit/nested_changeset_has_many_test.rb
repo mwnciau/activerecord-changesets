@@ -78,7 +78,7 @@ class NestedChangesetHasManyTest < TestCase
   end
 
   def test_has_many_required_raises_on_missing
-    error = assert_raises(ActiveRecordChangesets::MissingParameters) do
+    error = assert_raises(ActiveRecordChangesets::MissingParametersError) do
       Library.required_has_many(name: "City Library")
     end
 
@@ -120,7 +120,7 @@ class NestedChangesetHasManyTest < TestCase
   end
 
   def test_has_many_optional_raises_on_empty_nested_parameters
-    error = assert_raises(ActiveRecordChangesets::MissingParameters) do
+    error = assert_raises(ActiveRecordChangesets::MissingParametersError) do
       Library.optional_has_many(name: "City Library", books_attributes: [{}])
     end
 

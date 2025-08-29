@@ -65,7 +65,7 @@ class NestedChangesetHasOneTest < TestCase
   end
 
   def test_has_one_required_raises_on_missing
-    error = assert_raises(ActiveRecordChangesets::MissingParameters) do
+    error = assert_raises(ActiveRecordChangesets::MissingParametersError) do
       User.required_has_one(name: "Alice")
     end
 
@@ -84,7 +84,7 @@ class NestedChangesetHasOneTest < TestCase
   end
 
   def test_has_one_optional_raises_on_empty_nested_parameters
-    error = assert_raises(ActiveRecordChangesets::MissingParameters) do
+    error = assert_raises(ActiveRecordChangesets::MissingParametersError) do
       User.optional_has_one(name: "Alice", profile_attributes: {})
     end
 
