@@ -25,6 +25,11 @@ class NestedChangesetTest < TestCase
 
         nested_changeset :invalid, :valid_changeset
       end
+
+      changeset :strict_changeset, strict: true do
+        expect :name
+        nested_changeset :rooms, :valid_changeset, allow_destroy: true
+      end
     end
 
     Temping.create :room do
@@ -35,7 +40,9 @@ class NestedChangesetTest < TestCase
         t.belongs_to :house
       end
 
-      changeset :valid_changeset do; end
+      changeset :valid_changeset do
+        expect :name
+      end
     end
   end
 
@@ -53,5 +60,22 @@ class NestedChangesetTest < TestCase
     end
 
     assert_equal "Unknown changeset for Room: invalid_changeset", error.message
+  end
+
+  def test_strict_nested_changeset_does_not_raise
+    # Nested changesets use the :id and :_destroy attributes, which should not trigger errors in strict mode
+    house = House.create!
+    room_to_update = house.rooms.create!
+    room_to_delete = house.rooms.create!
+
+    assert_equal 1, House.count
+    assert_equal 2, house.rooms.count
+
+    house.strict_changeset(name: "Bob", rooms_attributes: [{id: room_to_update.id, name: "Red"}, {id: room_to_delete.id, name: "Blue", _destroy: true}]).save!
+
+    assert_equal 1, House.count
+    assert_equal 1, house.rooms.count
+    assert_equal "Bob", house.reload.name
+    assert_equal "Red", house.rooms.first.name
   end
 end
