@@ -4,8 +4,7 @@ module ActiveRecordChangesets
   class Error < StandardError; end
   class MissingParametersError < Error; end
   class StrictParametersError < Error; end
-
-  class UnknownChangeset < StandardError; end
+  class UnknownChangeset < Error; end
 
   mattr_accessor :ignored_attributes, default: [:authenticity_token, :_method]
   mattr_accessor :strict_mode, default: false
@@ -23,6 +22,37 @@ module ActiveRecordChangesets
   end
 
   module ClassMethods
+    # @!group Changeset DSL (class-level)
+
+    # @!scope class
+    # @!method nested_changeset(association, changeset, optional: false, **options)
+    #   Declare a nested changeset for an association and wire up nested attributes handling.
+    #   This makes "<association>_attributes" permitted or expected depending on `optional`,
+    #   and configures `accepts_nested_attributes_for` on the association.
+    #   @param association [Symbol, String] The association name (e.g., :profile)
+    #   @param changeset [Symbol, String] The changeset name on the associated model (e.g., :update_profile)
+    #   @param optional [Boolean] If true, parameters are optional; otherwise required
+    #   @param options [Hash] Options forwarded to `accepts_nested_attributes_for`
+    #   @option options [Boolean] :allow_destroy Whether to allow destroying nested records
+    #   @option options [Integer] :limit Max number of associated records
+    #   @option options [Boolean] :update_only Only update existing records
+    #   @option options [Proc,Symbol] :reject_if A Proc or a Symbol pointing to a method that checks whether a record should be built for a certain attribute hash
+    #   @see ActiveRecord::NestedAttributes::ClassMethods#accepts_nested_attributes_for
+
+    # @!scope class
+    # @!method expect(*parameter_keys)
+    #   Declare required parameters for a changeset. If any are missing, building/assigning
+    #   will raise an error describing the missing keys.
+    #   @param parameter_keys [Array<Symbol>] Keys that must be present in changeset parameters
+
+    # @!scope class
+    # @!method permit(*parameter_keys)
+    #   Declare optional parameters for this changeset. These are allowed but not required.
+    #   @param parameter_keys [Array<Symbol>] Keys that may be present in changeset parameters
+
+    # @!endgroup
+
+
     def changeset(name, **options, &block)
       key = name.to_sym
 
