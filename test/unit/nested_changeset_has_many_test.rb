@@ -23,7 +23,7 @@ class NestedChangesetHasManyTest < TestCase
 
       changeset :optional_has_many do
         validate_create
-        nested_changeset :books, :create_book, optional: true
+        nested_changeset :books, :create_book, optional: true, allow_destroy: true
       end
 
       changeset :required_has_many do
@@ -125,5 +125,37 @@ class NestedChangesetHasManyTest < TestCase
     end
 
     assert_equal "Book::Changesets::CreateBook: Expected parameters were missing: title", error.message
+  end
+
+  def test_has_many_edit_existing
+    library = Library.create!(name: "City Library")
+    book1 = library.books.create!(title: "Book A")
+
+    changeset = library.optional_has_many(name: "City Library Updated", books_attributes: [
+      {id: book1.id, title: "Book A2"},
+      {title: "Book B"}
+    ])
+    changeset.save!
+
+    assert_equal "City Library Updated", library.reload.name
+    assert_equal ["Book A2", "Book B"], library.books.order(:title).pluck(:title)
+  end
+
+  def test_has_many_destroy_existing
+    library = Library.create!(name: "City Library")
+    book1 = library.books.create!(title: "Book A")
+    book2 = library.books.create!(title: "Book B")
+
+    assert_equal 2, library.books.count
+
+    changeset = library.optional_has_many(name: "City Library Updated", books_attributes: [
+      {id: book1.id, title: "Book A2"},
+      {id: book2.id, title: "Book B", _destroy: true}
+    ])
+    changeset.save!
+
+    assert_equal 1, library.books.count
+    assert_equal ["Book A2"], library.books.order(:title).pluck(:title)
+    assert_nil Book.find_by(id: book2.id)
   end
 end

@@ -22,7 +22,7 @@ class NestedChangesetHabtmTest < TestCase
 
       changeset :optional_habtm do
         validate_create
-        nested_changeset :books, :create_book, optional: true
+        nested_changeset :books, :create_book, optional: true, allow_destroy: true
       end
 
       changeset :required_habtm do
@@ -113,5 +113,38 @@ class NestedChangesetHabtmTest < TestCase
     end
 
     assert_equal "Book::Changesets::CreateBook: Expected parameters were missing: title", error.message
+  end
+
+  def test_habtm_edit_existing
+    author = Author.create!(name: "A1")
+    book = author.books.create!(title: "B1")
+
+    changeset = author.optional_habtm(name: "A1 2", books_attributes: [
+      {id: book.id, title: "B1-Updated"}
+    ])
+    changeset.save!
+
+    author.reload
+    assert_equal "A1 2", author.name
+    assert_equal ["B1-Updated"], author.books.order(:title).pluck(:title)
+    assert_equal book.id, author.books.first.id
+  end
+
+  def test_habtm_destroy_existing
+    author = Author.create!(name: "A1")
+    book1 = author.books.create!(title: "B1")
+    book2 = author.books.create!(title: "B2")
+
+    changeset = author.optional_habtm(name: "A1", books_attributes: [
+      {id: book1.id, title: "B1"},
+      {id: book2.id, title: "B2", _destroy: true}
+    ])
+    changeset.save!
+
+    author.reload
+    titles = author.books.order(:title).pluck(:title)
+    assert_equal ["B1"], titles
+    assert_nil AuthorsBook.find_by(book_id: book2.id, author_id: author.id)
+    assert Book.find_by(id: book2.id)
   end
 end

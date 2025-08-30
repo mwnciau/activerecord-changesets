@@ -22,7 +22,7 @@ class NestedChangesetHasOneTest < TestCase
 
       changeset :optional_has_one do
         validate_create
-        nested_changeset :profile, :create_profile, optional: true
+        nested_changeset :profile, :create_profile, optional: true, allow_destroy: true
       end
 
       changeset :required_has_one do
@@ -89,5 +89,30 @@ class NestedChangesetHasOneTest < TestCase
     end
 
     assert_equal "Profile::Changesets::CreateProfile: Expected parameters were missing: name", error.message
+  end
+
+  def test_has_one_edit_existing
+    user = User.create!(name: "Alice")
+    profile = user.create_profile!(name: "About Alice")
+
+    changeset = user.optional_has_one(name: "Alice 2", profile_attributes: {id: profile.id, name: "About Alice Updated"})
+    changeset.save!
+
+    user.reload
+    assert_equal "Alice 2", user.name
+    assert_equal "About Alice Updated", user.profile.name
+    assert_equal profile.id, user.profile.id
+  end
+
+  def test_has_one_destroy_existing
+    user = User.create!(name: "Alice")
+    profile = user.create_profile!(name: "About Alice")
+
+    changeset = user.optional_has_one(name: "Alice", profile_attributes: {id: profile.id, name: "About Alice", _destroy: true})
+    changeset.save!
+
+    user.reload
+    assert_nil user.profile
+    assert_equal 0, Profile.count
   end
 end

@@ -54,7 +54,7 @@ class NestedChangesetBelongsToTest < TestCase
 
       changeset :optional_belongs_to do
         validate_create
-        nested_changeset :house, :create_house, optional: true
+        nested_changeset :house, :create_house, optional: true, allow_destroy: true
       end
 
       changeset :required_belongs_to do
@@ -126,5 +126,30 @@ class NestedChangesetBelongsToTest < TestCase
     end
 
     assert_equal "House::Changesets::CreateHouse: Expected parameters were missing: name", error.message
+  end
+
+  def test_belongs_to_edit_existing
+    house = House.create!(name: "Old House")
+    room = Room.create!(name: "Kitchen", house: house)
+
+    changeset = room.optional_belongs_to(name: "Kitchen 2", house_attributes: {id: house.id, name: "New House"})
+    changeset.save!
+
+    room.reload
+    assert_equal "Kitchen 2", room.name
+    assert_equal "New House", room.house.name
+    assert_equal house.id, room.house.id
+  end
+
+  def test_belongs_to_destroy_existing
+    house = House.create!(name: "Old House")
+    room = Room.create!(name: "Kitchen", house: house)
+
+    changeset = room.optional_belongs_to(name: "Kitchen", house_attributes: {id: house.id, name: "Old House", _destroy: true})
+    changeset.save!
+
+    room.reload
+    assert_nil room.house
+    assert_equal 0, House.count
   end
 end
