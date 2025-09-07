@@ -13,3 +13,15 @@ class TestCase < Minitest::Test
     Temping.teardown
   end
 end
+
+class Object
+  def dd
+    abort "
+      Debug output
+      #{caller(1..1)&.first&.delete_prefix("/var/source/")}
+      (#{self.class.name}):
+      #{pretty_inspect}
+    "
+  end
+end
+

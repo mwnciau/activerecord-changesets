@@ -13,7 +13,7 @@ class MassAssignmentTest < TestCase
         t.string :other
       end
 
-      changeset :expected_changeset do
+      changeset :expected_changeset, strict: false do
         expect :name, :email
       end
 
@@ -21,7 +21,7 @@ class MassAssignmentTest < TestCase
         permit :name, :email
       end
 
-      changeset :mixed_changeset do
+      changeset :mixed_changeset, strict: false do
         expect :name
         permit :email
       end
