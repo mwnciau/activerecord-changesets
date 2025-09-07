@@ -1,8 +1,8 @@
 PATH
   remote: .
   specs:
-    activerecord-changesets (1.0.0)
-      activerecord (>= 8.0)
+    activerecord-changesets (1.0.1)
+      activerecord (~> 8.0)
 
 GEM
   remote: https://rubygems.org/
@@ -141,7 +141,7 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
-  actionpack (>= 8.0)
+  actionpack (~> 8.0)
   activerecord-changesets!
   benchmark-ips (~> 2.14)
   minitest (~> 5.0)
