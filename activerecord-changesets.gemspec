@@ -1,12 +1,12 @@
 Gem::Specification.new do |s|
   s.name = "activerecord-changesets"
-  s.version = "1.0.1"
+  s.version = "1.0.2"
   s.summary = "Make your model updates explicit and predictable using changesets"
   s.description = "Instead of scattering validations, strong parameters, and business rules across controllers and models, changesets give you one clear pipeline for handling data before it touches the database."
   s.authors = ["Simon J"]
   s.email = "2857218+mwnciau@users.noreply.github.com"
   s.files = [
-    "lib/active_record_changesets.rb",
+    "lib/activerecord-changesets.rb",
     "CHANGELOG.md",
     "LICENSE.md",
     "README.md",

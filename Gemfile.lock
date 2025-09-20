@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    activerecord-changesets (1.0.1)
+    activerecord-changesets (1.0.2)
       activerecord (~> 8.0)
 
 GEM
