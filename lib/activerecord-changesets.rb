@@ -56,7 +56,7 @@ module ActiveRecordChangesets
     base.class_attribute :_changesets, default: {}
     base.private_class_method :_changesets, :_changesets=
 
-    base.class_attribute :_changeset_mutex, instance_accessor: false, default: Mutex.new
+    base.class_attribute :_changeset_mutex, instance_accessor: false, default: Monitor.new
     base.private_class_method :_changeset_mutex, :_changeset_mutex=
 
     base.const_set(:Changesets, Module.new)
@@ -166,7 +166,7 @@ module ActiveRecordChangesets
         # observing a Proc and building two distinct classes
         return _changesets[name][:class] if _changesets[name][:class].present?
 
-        _changesets[name][:class] = build_changeset_class(name)
+        build_changeset_class(name)
       end
     end
 
@@ -298,6 +298,10 @@ module ActiveRecordChangesets
         end
       end
       changeset_class.changeset_options = _changesets[name][:options]
+
+      # Set the cached class before evaluating the DSL to avoid race conditions
+      _changesets[name][:class] = changeset_class
+
       changeset_class.class_eval(&_changesets[name][:dsl_proc])
       _changesets[name].delete :dsl_proc
 
