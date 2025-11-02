@@ -1,3 +1,6 @@
+## 1.0.3 [UNRELEASED]
+- Fix invalid import in test helper
+
 ## 1.0.2 [2025-09-20]
 - Fix invalid require path preventing gem from loading
 

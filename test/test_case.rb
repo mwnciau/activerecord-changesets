@@ -1,6 +1,6 @@
 require "minitest/autorun"
 require "minitest/reporters"
-require "active_record_changesets"
+require "activerecord-changesets"
 require "temping"
 
 ActiveRecord::Base.establish_connection(
