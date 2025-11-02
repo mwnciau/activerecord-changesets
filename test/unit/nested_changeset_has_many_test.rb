@@ -133,7 +133,7 @@ class NestedChangesetHasManyTest < TestCase
 
     changeset = library.optional_has_many(name: "City Library Updated", books_attributes: [
       {id: book1.id, title: "Book A2"},
-      {title: "Book B"}
+      {title: "Book B"},
     ])
     changeset.save!
 
@@ -150,7 +150,7 @@ class NestedChangesetHasManyTest < TestCase
 
     changeset = library.optional_has_many(name: "City Library Updated", books_attributes: [
       {id: book1.id, title: "Book A2"},
-      {id: book2.id, title: "Book B", _destroy: true}
+      {id: book2.id, title: "Book B", _destroy: true},
     ])
     changeset.save!
 

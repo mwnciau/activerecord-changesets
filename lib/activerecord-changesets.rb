@@ -26,13 +26,13 @@ require "active_support/core_ext/module/attribute_accessors"
 module ActiveRecordChangesets
   # Base error for all gem-specific exceptions
   class Error < StandardError; end
-  
+
   # Raised when required parameters are missing while building/assigning a changeset
   class MissingParametersError < Error; end
-  
+
   # Raised when strict mode is enabled and unexpected parameters are provided
   class StrictParametersError < Error; end
-  
+
   # Raised when requesting an undefined changeset
   class UnknownChangeset < Error; end
 
@@ -40,7 +40,7 @@ module ActiveRecordChangesets
   # attributes in strict mode. Defaults to Rails form helpers params.
   # @return [Array<Symbol>]
   mattr_accessor :ignored_attributes, default: [:authenticity_token, :_method]
-  
+
   # Global default for strict mode. If true, changesets will reject any
   # parameters not explicitly expected/permitted. Can be overridden per changeset.
   # @return [Boolean]
@@ -151,7 +151,6 @@ module ActiveRecordChangesets
       end
     end
 
-    
     # Resolve or build the concrete changeset class for the given name.
     # The class is built lazily and cached. Thread-safe via a mutex.
     # @param name [Symbol, String]

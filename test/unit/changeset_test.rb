@@ -64,7 +64,7 @@ class ChangesetTest < TestCase
   def test_strict_with_ignored_string_attributes
     cat = Cat.create!(name: "Bob")
 
-    changeset = cat.strict_change_name(name: "Rob", "authenticity_token" => "something", "_method" => "patch")
+    changeset = cat.strict_change_name(:name => "Rob", "authenticity_token" => "something", "_method" => "patch")
     changeset.save!
 
     assert_equal "Rob", cat.reload.name

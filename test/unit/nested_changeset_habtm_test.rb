@@ -120,7 +120,7 @@ class NestedChangesetHabtmTest < TestCase
     book = author.books.create!(title: "B1")
 
     changeset = author.optional_habtm(name: "A1 2", books_attributes: [
-      {id: book.id, title: "B1-Updated"}
+      {id: book.id, title: "B1-Updated"},
     ])
     changeset.save!
 
@@ -137,7 +137,7 @@ class NestedChangesetHabtmTest < TestCase
 
     changeset = author.optional_habtm(name: "A1", books_attributes: [
       {id: book1.id, title: "B1"},
-      {id: book2.id, title: "B2", _destroy: true}
+      {id: book2.id, title: "B2", _destroy: true},
     ])
     changeset.save!
 
